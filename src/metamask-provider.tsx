@@ -63,6 +63,13 @@ function subscribeToChainChanged(dispatch: (action: Action) => void) {
   };
 }
 
+// MetaMask - RPC Error: Request of type 'wallet_requestPermissions' already pending for origin [origin]. Please wait.
+const ERROR_CODE_REQUEST_PENDING = -32002;
+interface ErrorWithCode {
+  code: number;
+  [key: string]: any;
+}
+
 async function requestAccounts(
   dispatch: (action: Action) => void
 ): Promise<string[]> {
@@ -76,6 +83,9 @@ async function requestAccounts(
     dispatch({ type: "metaMaskConnected", payload: { accounts } });
     return accounts;
   } catch (err) {
+    if ((err as ErrorWithCode)?.code === ERROR_CODE_REQUEST_PENDING) {
+      return [];
+    }
     dispatch({ type: "metaMaskPermissionRejected" });
     throw err;
   }
